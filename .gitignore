@@ -1,0 +1,12 @@
+*.cpg
+*.dbf
+*.geojson
+*.png
+*.prj
+*.shp
+*.shx
+*.tif
+images/*
+*.venv
+*.pth
+__pycache__/
