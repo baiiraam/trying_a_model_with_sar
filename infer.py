@@ -13,7 +13,7 @@ from PIL import Image
 # ============================================
 # Load Model
 # ============================================
-checkpoint = torch.load('rn50_ssl4eo-s12_sar_decur_ep100.pth', map_location='cpu')
+checkpoint = torch.load("rn50_ssl4eo-s12_sar_decur_ep100.pth", map_location="cpu")
 print("Checkpoint loaded")
 
 # Create a standard ResNet-50 model
@@ -27,20 +27,21 @@ model.fc = nn.Identity()
 
 # Load the state dict
 state_dict = checkpoint
-if 'state_dict' in checkpoint:
-    state_dict = checkpoint['state_dict']
-elif 'model' in checkpoint:
-    state_dict = checkpoint['model']
+if "state_dict" in checkpoint:
+    state_dict = checkpoint["state_dict"]
+elif "model" in checkpoint:
+    state_dict = checkpoint["model"]
 
 # Remove 'module.' prefix if present
 new_state_dict = {}
 for k, v in state_dict.items():
-    name = k.replace('module.', '')
+    name = k.replace("module.", "")
     new_state_dict[name] = v
 
 # Load weights
 model.load_state_dict(new_state_dict, strict=False)
 print("Weights loaded successfully")
+
 
 # Add segmentation head
 class WaterSegmentationModel(nn.Module):
@@ -52,7 +53,7 @@ class WaterSegmentationModel(nn.Module):
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
             nn.Conv2d(256, 1, kernel_size=1),
-            nn.Upsample(scale_factor=32, mode='bilinear', align_corners=False)
+            nn.Upsample(scale_factor=32, mode="bilinear", align_corners=False),
         )
 
     def forward(self, x):
@@ -67,9 +68,10 @@ class WaterSegmentationModel(nn.Module):
         x = self.seg_head(x)
         return torch.sigmoid(x)
 
+
 # Create full model
 full_model = WaterSegmentationModel(model)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 full_model = full_model.to(device)
 full_model.eval()
 print(f"Model ready on {device}")
@@ -77,7 +79,9 @@ print(f"Model ready on {device}")
 # ============================================
 # Load and Process Image
 # ============================================
-image_path = "images/S1GRD_part_19_5_4_20250111_20250120_f914ee191bc94c5ca54d645bbbc6f9d0.tif"
+image_path = (
+    "images/S1GRD_part_19_5_4_20250111_20250120_f914ee191bc94c5ca54d645bbbc6f9d0.tif"
+)
 
 with rasterio.open(image_path) as src:
     image = src.read()
@@ -102,7 +106,7 @@ new_h = ((h + 31) // 32) * 32
 new_w = ((w + 31) // 32) * 32
 if h != new_h or w != new_w:
     image_tensor = torch.nn.functional.interpolate(
-        image_tensor, size=(new_h, new_w), mode='bilinear'
+        image_tensor, size=(new_h, new_w), mode="bilinear"
     )
     print(f"Resized from {h}x{w} to {new_h}x{new_w}")
 
@@ -149,19 +153,16 @@ Path("predictions").mkdir(exist_ok=True)
 # Save as GeoTIFF
 output_path = "predictions/water_mask.tif"
 out_meta = meta.copy()
-out_meta.update({
-    'count': 1,
-    'dtype': np.uint8,
-    'compress': 'lzw'
-})
+out_meta.update({"count": 1, "dtype": np.uint8, "compress": "lzw"})
 
-with rasterio.open(output_path, 'w', **out_meta) as dst:
+with rasterio.open(output_path, "w", **out_meta) as dst:
     dst.write(water_mask.astype(np.uint8), 1)
 
 print(f"\nSaved GeoTIFF to {output_path}")
 
 # Convert mask to shapefile
 print("\nConverting to shapefile...")
+
 
 def mask_to_polygons(mask, transform, crs, min_area=100):
     """Convert binary mask to polygons"""
@@ -191,15 +192,15 @@ def mask_to_polygons(mask, transform, crs, min_area=100):
 
     return polygons, areas
 
+
 water_mask_uint8 = water_mask.astype(np.uint8)
 polygons, areas = mask_to_polygons(water_mask_uint8, transform, crs)
 
 if polygons:
-    gdf = gpd.GeoDataFrame({
-        'id': range(1, len(polygons) + 1),
-        'area_m2': areas,
-        'geometry': polygons
-    }, crs=crs)
+    gdf = gpd.GeoDataFrame(
+        {"id": range(1, len(polygons) + 1), "area_m2": areas, "geometry": polygons},
+        crs=crs,
+    )
 
     shp_path = "predictions/water_mask.shp"
     gdf.to_file(shp_path)
@@ -208,7 +209,7 @@ if polygons:
     print(f"  Total water area: {sum(areas):.2f} square meters")
 
     geojson_path = "predictions/water_mask.geojson"
-    gdf.to_file(geojson_path, driver='GeoJSON')
+    gdf.to_file(geojson_path, driver="GeoJSON")
     print(f"Saved GeoJSON to {geojson_path}")
 else:
     print("No water polygons found (area < 100 sq meters)")
