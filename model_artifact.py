@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 
+
 class SSL4EOS12DeCURModel(nn.Module):
     """ResNet-50 model pretrained with DeCUR on SSL4EO-S12 dataset"""
 
@@ -28,7 +29,7 @@ class SSL4EOS12DeCURModel(nn.Module):
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.Conv2d(128, num_classes, kernel_size=1),
-            nn.Upsample(scale_factor=32, mode='bilinear', align_corners=False)
+            nn.Upsample(scale_factor=32, mode="bilinear", align_corners=False),
         )
 
     def forward(self, x):
