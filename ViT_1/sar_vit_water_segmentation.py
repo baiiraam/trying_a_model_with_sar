@@ -12,8 +12,7 @@ Date: 2026-04-18
 
 import os
 import random
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -29,7 +28,7 @@ from rasterio import features
 import geopandas as gpd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from scipy.ndimage import rotate, zoom
+from scipy.ndimage import zoom
 
 # ============================================
 # Configuration
@@ -804,7 +803,7 @@ class Trainer:
             )
 
         print(f"\n{'='*60}")
-        print(f"Training completed!")
+        print("Training completed!")
         print(f"Best loss: {self.best_loss:.4f}")
         print(f"{'='*60}\n")
 
@@ -1244,7 +1243,7 @@ def main():
         dropout=Config.DROPOUT,
     )
 
-    print(f"   Model: Vision Transformer")
+    print("   Model: Vision Transformer")
     print(
         f"   Input: {Config.INPUT_BANDS} bands ({Config.IMAGE_SIZE}x{Config.IMAGE_SIZE})"
     )
@@ -1268,7 +1267,7 @@ def main():
     trainer.plot_history()
 
     # Save final model
-    print(f"\nSaving final model...")
+    print("\nSaving final model...")
     DataManager.save_model_checkpoint(
         model,
         paths["final_model"],
